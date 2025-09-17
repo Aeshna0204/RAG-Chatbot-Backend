@@ -12,7 +12,7 @@ const app = express();
 app.use(bodyParser.json());
 
 app.use(cors({
-  origin: ["http://localhost:5173"],  // frontend ka URL
+  origin: ["http://localhost:5173","https://rag-chatbot-frontend-one.vercel.app"],  // frontend ka URL
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
