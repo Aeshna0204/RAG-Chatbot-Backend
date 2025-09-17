@@ -15,7 +15,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Configuration
-QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+QDRANT_URL = os.environ.get("QDRANT_URL", "https://6e0ab588-3e99-45a9-8671-3789714b9790.us-east-1-1.aws.cloud.qdrant.io:6333")
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 COLLECTION = os.environ.get("QDRANT_COLLECTION", "news_articles")
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
 MAX_ARTICLES = int(os.environ.get("MAX_ARTICLES", "50"))
@@ -24,7 +25,10 @@ if not JINA_API_KEY:
     raise ValueError("JINA_API_KEY environment variable is required")
 
 # Initialize Qdrant client
-qdrant = QdrantClient(url=QDRANT_URL)
+qdrant = QdrantClient(
+    url=QDRANT_URL,
+    api_key=QDRANT_API_KEY,
+)
 
 def setup_collection():
     """Setup or recreate the Qdrant collection"""

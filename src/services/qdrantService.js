@@ -43,7 +43,12 @@ async function initQdrantCollection() {
       vector,
       limit: k,
       with_payload: true
-    }, { timeout: 20000 });
+    }, {
+        headers: {
+          "api-key": process.env.QDRANT_API_KEY,   // <--- ye line missing thi
+        },
+        timeout: 20000,
+      });
 
     // Qdrant returns .result array with {id, payload, score}
     return (res.data?.result || []).map(r => ({
