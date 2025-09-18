@@ -1,5 +1,5 @@
 const express =require("express");
-const { createSession, getHistory, clearSession , listSessions} =require("../services/redisService.js");
+const { createSession, getHistory, clearSession , listSessions,resetChatHistory} =require("../services/redisService.js");
 
 const router = express.Router();
 
@@ -34,6 +34,18 @@ router.get("/list-sessions",async(req,res)=>{
     res.status(500).json({error:err.message || "Failed to list sessions"});
   }
 })
+
+router.post("/:sessionId/reset", async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    await resetChatHistory(sessionId);
+    res.json({ success: true, message: "Chat history reset successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to reset chat" });
+  }
+});
+
 
 // DELETE /session/:id
 router.delete("/:id", async (req, res) => {

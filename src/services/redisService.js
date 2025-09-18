@@ -25,6 +25,7 @@ async function createSession(ttlSeconds = 60 * 60) { // default 1 hour TTL
 }
 
 
+
 async function listSessions() {
   const sessionIds = await redisClient.sMembers("sessions:list");
   const sessions = await Promise.all(sessionIds.map(async (sessionId) => {
@@ -83,6 +84,19 @@ async function clearSession(sessionId) {
   await redisClient.sRem("sessions:list", sessionId);
 }
 
+async function resetChatHistory(sessionId) {
+  const key = `session:${sessionId}:history`;
+  await redisClient.del(key);
+
+  // Optional: also clear first question if you want
+  const firstQuestionKey = `session:${sessionId}:firstQuestion`;
+  await redisClient.del(firstQuestionKey);
+
+  // ⚠️ Don’t remove from "sessions:list"
+  // because the session should still exist and appear in UI
+}
+
+
 // helper: create hash of query (to keep keys short)
 function hashQuery(query) {
   return crypto.createHash("sha256").update(query).digest("hex");
@@ -108,4 +122,4 @@ async function setCachedAnswer(query, answer, ttlSeconds = 1800) {
 
 
 
-module.exports = { initRedis, createSession, saveMessage, getHistory, clearSession, getCachedAnswer, setCachedAnswer, listSessions }; 
+module.exports = { initRedis, createSession, saveMessage, getHistory, clearSession, getCachedAnswer, setCachedAnswer, listSessions, resetChatHistory }; 
