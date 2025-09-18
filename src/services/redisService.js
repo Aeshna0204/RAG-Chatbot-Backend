@@ -26,7 +26,13 @@ async function createSession(ttlSeconds = 60 * 60) { // default 1 hour TTL
 
 
 async function listSessions() {
-  return await redisClient.sMembers("sessions:list");
+  const sessionIds = await redisClient.sMembers("sessions:list");
+  const sessions = await Promise.all(sessionIds.map(async (sessionId) => {
+    const firstQuestionKey = `session:${sessionId}:firstQuestion`;
+    const firstQuestion = await redisClient.get(firstQuestionKey);
+    return { sessionId, firstQuestion };
+  }));
+  return sessions;
 }
 
 
@@ -34,6 +40,17 @@ async function saveMessage(sessionId, message) {
   const key = `session:${sessionId}:history`;
   // store messages as JSON strings in a list
   await redisClient.rPush(key, JSON.stringify({ ...message, ts: Date.now() }));
+
+  // Store the first user question separately
+  if (message.role === 'user') {
+    const firstQuestionKey = `session:${sessionId}:firstQuestion`;
+    const firstQuestion = await redisClient.get(firstQuestionKey);
+    if (!firstQuestion) {
+      await redisClient.set(firstQuestionKey, message.text);
+    }
+  }
+
+
   // ✅ add sessionId only if this is the first message
   const length = await redisClient.lLen(key);
   if (length === 1) {
@@ -49,10 +66,20 @@ async function getHistory(sessionId) {
   return items.map(i => JSON.parse(i));
 }
 
+// async function clearSession(sessionId) {
+//   const key = `session:${sessionId}:history`;
+//   await redisClient.del(key);
+//   // 2. remove session ID from the set
+//   await redisClient.sRem("sessions:list", sessionId);
+// }
+
 async function clearSession(sessionId) {
   const key = `session:${sessionId}:history`;
   await redisClient.del(key);
-  // 2. remove session ID from the set
+
+  const firstQuestionKey = `session:${sessionId}:firstQuestion`;
+  await redisClient.del(firstQuestionKey);
+
   await redisClient.sRem("sessions:list", sessionId);
 }
 
